@@ -1,0 +1,9 @@
+### GET request to example server
+POST http://localhost:5006/api/auth/signup
+
+{
+"fullName": "John Doe",
+"email": "johndoe@email.com",
+"password": "securePassword123"
+}
+###
