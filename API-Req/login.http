@@ -1,0 +1,5 @@
+### POST login request to example server
+POST http://localhost:5006/api/auth/login
+Content-Type: application/json
+
+###

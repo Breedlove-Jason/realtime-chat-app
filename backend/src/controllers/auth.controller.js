@@ -3,16 +3,42 @@ import { User } from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 
 export const signup = async (req, res) => {
-  const { fullName, email, password } = req.body;
+  console.log('Signup controller called');
+  console.log('Request body:', req.body);
+  
   try {
+    // Check if req.body exists
+    if (!req.body) {
+      console.error('Request body is undefined');
+      return res.status(400).json({ message: "Request body is missing" });
+    }
+    
+    // Access body properties safely
+    const fullName = req.body.fullName;
+    const email = req.body.email;
+    const password = req.body.password;
+    
+    // Check if required fields are present
+    if (!fullName || !email || !password) {
+      console.error('Missing required fields:', { 
+        hasFullName: !!fullName, 
+        hasEmail: !!email, 
+        hasPassword: !!password 
+      });
+      return res.status(400).json({ 
+        message: "Missing required fields (fullName, email, or password)" 
+      });
+    }
+    
     if (password.length < 6) {
       return res
         .status(400)
-        .send("Password must be at least 6 characters long");
+        .json({ message: "Password must be at least 6 characters long" });
     }
+    
     const user = await User.findOne({ email });
     if (user)
-      return res.status(400).send("User already exists with this email");
+      return res.status(400).json({ message: "User already exists with this email" });
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -22,6 +48,7 @@ export const signup = async (req, res) => {
       email,
       password: hashedPassword,
     });
+    
     if (newUser) {
       // generate jwt token
       generateToken(newUser._id, res);
