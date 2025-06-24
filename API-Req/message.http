@@ -1,0 +1,44 @@
+### Message API Requests
+# Note: All endpoints require authentication via JWT token in cookies
+# To authenticate:
+# 1. First run the login.http request to get a JWT token in cookies
+# 2. Then run these requests - the JWT cookie will be automatically included
+
+@baseUrl = http://localhost:5006/api
+@messageEndpoint = {{baseUrl}}/message
+@contentType = application/json
+
+### Get users for sidebar
+# Requires authentication via jwt cookie
+GET {{messageEndpoint}}/users
+Content-Type: {{contentType}}
+
+### Get messages with a specific user
+# Requires authentication via jwt cookie
+# Replace :userId with the actual user ID
+GET {{messageEndpoint}}/:userId
+Content-Type: {{contentType}}
+
+### Send message to a specific user
+# Requires authentication via jwt cookie
+# Replace :userId with the actual user ID
+POST {{messageEndpoint}}/send/:userId
+Content-Type: {{contentType}}
+
+{
+    "text": "Hello, this is a test message!"
+}
+
+### Send message with image to a specific user
+# Requires authentication via jwt cookie
+# Replace :userId with the actual user ID
+# Replace the image value with a base64 encoded image
+POST {{messageEndpoint}}/send/:userId
+Content-Type: {{contentType}}
+
+{
+    "text": "Here's an image for you!",
+    "image": "base64EncodedImageString"
+}
+
+###

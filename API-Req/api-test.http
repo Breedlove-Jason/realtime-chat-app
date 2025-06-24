@@ -1,0 +1,90 @@
+### Comprehensive API Test Script
+# This script tests all endpoints of the realtime-chat-app API
+# Run the requests in order from top to bottom
+
+@baseUrl = http://localhost:5006/api
+@authEndpoint = {{baseUrl}}/auth
+@messageEndpoint = {{baseUrl}}/message
+@contentType = application/json
+
+### 1. AUTHENTICATION ENDPOINTS ###
+
+### 1.1 Signup request
+# Creates a new user account
+POST {{authEndpoint}}/signup
+Content-Type: {{contentType}}
+
+{
+    "fullName": "Test User", 
+    "email": "testuser@example.com",
+    "password": "testPassword123"
+}
+
+### 1.2 Login request
+# Authenticates a user and sets JWT cookie
+POST {{authEndpoint}}/login
+Content-Type: {{contentType}}
+
+{
+    "email": "testuser@example.com",
+    "password": "testPassword123"
+}
+
+### 1.3 Check Authentication
+# Verifies if the user is authenticated
+GET {{authEndpoint}}/check
+Content-Type: {{contentType}}
+
+### 1.4 Update Profile
+# Updates the user's profile picture
+# Note: Replace the base64 string with an actual base64 encoded image
+PUT {{authEndpoint}}/update-profile
+Content-Type: {{contentType}}
+
+{
+    "profilePic": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wAARCAABAAEDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD9/KKKKAP/2Q=="
+}
+
+### 2. MESSAGE ENDPOINTS ###
+
+### 2.1 Get users for sidebar
+# Retrieves a list of users for the sidebar
+GET {{messageEndpoint}}/users
+Content-Type: {{contentType}}
+
+### 2.2 Get messages with a specific user
+# Retrieves messages between the authenticated user and another user
+# Replace 6859d8a46cad00f92d02b349 with an actual user ID from the previous response
+GET {{messageEndpoint}}/6859d8a46cad00f92d02b349
+Content-Type: {{contentType}}
+
+### 2.3 Send a text message to a specific user
+# Sends a text message to another user
+# Replace 6859d8a46cad00f92d02b349 with an actual user ID
+POST {{messageEndpoint}}/send/6859d8a46cad00f92d02b349
+Content-Type: {{contentType}}
+
+{
+    "text": "Hello, this is a test message!"
+}
+
+### 2.4 Send a message with image to a specific user
+# Sends a message with both text and image to another user
+# Replace 6859d8a46cad00f92d02b349 with an actual user ID
+# Replace the base64 string with an actual base64 encoded image
+POST {{messageEndpoint}}/send/6859d8a46cad00f92d02b349
+Content-Type: {{contentType}}
+
+{
+    "text": "Here's an image for you!",
+    "image": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wAARCAABAAEDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD9/KKKKAP/2Q=="
+}
+
+### 3. LOGOUT ###
+
+### 3.1 Logout request
+# Logs out the user by clearing the JWT cookie
+POST {{authEndpoint}}/logout
+Content-Type: {{contentType}}
+
+### End of API Test Script
