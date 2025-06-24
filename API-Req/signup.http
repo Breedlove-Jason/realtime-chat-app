@@ -1,10 +1,15 @@
 ### Signup request
-POST http://localhost:5006/api/auth/signup
-Content-Type: application/json
+@baseUrl = http://localhost:5006/api
+@authEndpoint = {{baseUrl}}/auth
+@contentType = application/json
+
+POST {{authEndpoint}}/signup
+Content-Type: {{contentType}}
 
 {
-"fullName": "John Doe",
-"email": "johndoe@email.com",
-"password": "securePassword123"
+    "fullName": "John Doe", 
+    "email": "johndoe@email.com",
+    "password": "securePassword123"
 }
+
 ###
