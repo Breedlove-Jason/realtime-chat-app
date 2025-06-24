@@ -1,0 +1,9 @@
+### Auth Check request
+#@baseUrl = http://localhost:5006/api
+#@authEndpoint = {{baseUrl}}/auth
+#@contentType = application/json
+GET http://localhost:5006/api/auth/check
+Content-Type: application/json
+#Cookie: jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODU5ZDhhNDZjYWQwMGY5MmQwMmIzNDkiLCJpYXQiOjE3NTA3MzEyMTksImV4cCI6MTc1MTMzNjAxOX0.NgACAf8XgPmC6909zbH_-OlW4QDg0wITngIcj4X6r9c
+
+###
