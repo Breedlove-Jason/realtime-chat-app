@@ -1,6 +1,7 @@
 import { generateToken } from "../lib/utils.js";
 import { User } from "../models/user.model.js";
 import bcrypt from "bcryptjs";
+import cloudinary from "../lib/cloudinary.js";
 
 // Extracted validation functions
 const validateRequestBody = (req) => {
@@ -163,5 +164,26 @@ export const logout = (req, res) => {
 };
 
 export const updateProfile = async (req, res) => {
+  try {
+      const {profilePic} = req.body;
+      const userId = req.user._id; // Assuming req.user is set by the protectRoute middleware
+    if(!profilePic){
+        return res.status(400).json({message: "Profile picture is required"});
+    }
+    const uploadResponse = await cloudinary.uploader.upload(profilePic)
+    const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { profilePic: uploadResponse.secure_url },
+        { new: true } // Ensures the updated document is returned
+    );
+    if(!updatedUser){
+      return res.status(404).json({message: "User not found"});
+    }
+    return res.status(200).json({
+        message: "Profile updated successfully",})
+  } catch (e) {
+      console.error(e);
+      res.status(500).json({message: "Internal server error"});
+  }
 
 }
