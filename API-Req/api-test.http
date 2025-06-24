@@ -35,7 +35,7 @@ Content-Type: {{contentType}}
 GET {{authEndpoint}}/check
 Content-Type: {{contentType}}
 
-### 1.4 Update Profile
+### 1.4 Update ProfilePage
 # Updates the user's profile picture
 # Note: Replace the base64 string with an actual base64 encoded image
 PUT {{authEndpoint}}/update-profile
