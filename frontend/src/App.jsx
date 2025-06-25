@@ -4,11 +4,16 @@ import HomePage from "./pages/HomePage.jsx";
 import SignUpPage from "./pages/SignUpPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import SettingsPage from "./pages/SettingsPage.jsx";
-import ProfilePage from "./pages/ProfilePage.jsx"
+import ProfilePage from "./pages/Profile.jsx" //different filename but same function name
 import {useAuthStore} from "./store/useAuthStore.js";
+import {useEffect} from "react";
 
 function App() {
-    const {authUser} = useAuthStore()
+    const {authUser, checkAuth} = useAuthStore()
+    useEffect(() => {
+        checkAuth()
+    }, [checkAuth])
+    console.log("Auth User:", authUser)
   return (
     <>
       <div>
