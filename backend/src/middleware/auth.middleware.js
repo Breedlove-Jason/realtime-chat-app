@@ -5,7 +5,7 @@ dotenv.config();
 
 export const protectRoute = async (req, res, next) => {
   try {
-      console.log('Protect Route Middleware - Checking JWT Token');
+      // console.log('Protect Route Middleware - Checking JWT Token');
 
     if (!req.cookies || !req.cookies.jwt) {
       return res
