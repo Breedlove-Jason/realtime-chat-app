@@ -33,7 +33,7 @@ function Navbar() {
             {authUser && (
               <>
                 <Link to={'/profile'} className={`btn btn-small gap-2`}>
-                  <User classname={'size-5'} />
+                  <User className={'size-5'} />
                   <span className={'hidden sm:inline'}>Profile</span>
                 </Link>
                 <button className="flex gap-2 items-center" onClick={logout}>

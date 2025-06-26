@@ -3,15 +3,24 @@ import { useAuthStore } from '../store/useAuthStore.js';
 import { MessageSquare, Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react';
 import AuthImagePattern from "../components/AuthImagePattern.jsx";
 import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '' });
   const { login, isLoggingIn } = useAuthStore();
 
+  const validateForm = () => {
+    if(!formData.email.trim()) return toast.error("Email is required");
+    if(!/\S+@\S+\.\S+/.test(formData.email)) return toast.error("Invalid email format");
+    if(!formData.password) return toast.error("Password is required");
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await login(formData);
+    const success = validateForm();
+    if(success === true) await login(formData);
   };
   return (
     <div className="h-screen grid lg:grid-cols-2">
@@ -62,11 +71,11 @@ function LoginPage() {
                   <Lock className={'h-5 w-5 text-base-content/40'} />
                 </div>
                 <input
-                  type={showPassword ? text : 'password'}
+                  type={showPassword ? 'text' : 'password'}
                   className={'input input-bordered w-full pl-10'}
                   placeholder={'••••••••'}
                   value={formData.password}
-                  onChange={() =>
+                  onChange={(e) =>
                     setFormData({ ...formData, password: e.target.value })
                   }
                 />
