@@ -14,9 +14,15 @@ import { useThemeStore } from './store/useThemeStore.js';
 function App() {
   const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
   const { theme } = useThemeStore();
+
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
+
+  // Apply theme to document element to prevent UI from looking squished initially
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
   console.log('Auth User:', authUser);
   if (isCheckingAuth && !authUser) {
     return (
