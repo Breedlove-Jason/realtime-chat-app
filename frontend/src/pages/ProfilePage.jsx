@@ -1,5 +1,4 @@
-// webstorm refuses to use ProfilePage.jsx
-// we shortened it but maintained the same function name
+
 
 import React from "react";
 import { useAuthStore } from "../store/useAuthStore.js";
