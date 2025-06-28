@@ -4,7 +4,7 @@ import HomePage from './pages/HomePage.jsx';
 import SignUpPage from './pages/SignUpPage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
-import ProfilePage from './pages/ProfilePage.jsx'; //different filename but same function name
+import ProfilePage from './pages/ProfilePage.jsx';
 import { useAuthStore } from './store/useAuthStore.js';
 import { useEffect } from 'react';
 import { Loader } from 'lucide-react';
