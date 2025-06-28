@@ -16,7 +16,7 @@ app.use(cors({
     credentials: true, // Allow cookies to be sent with requests
 }))
 app.use("/api/auth", authRoutes)
-app.use("/api/message", messageRoutes)
+app.use("/api/messages", messageRoutes)
 
 const PORT = process.env.PORT || 5006
 app.listen(PORT, () => {
