@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useChatStore } from "../store/useChatStore.js";
 import { useAuthStore } from "../store/useAuthStore.js";
-import SidebarSkeleton from "./SidebarSkeleton.jsx";
+import SidebarSkeleton from "./skeletons/SidebarSkeleton.jsx";
 import { Users } from "lucide-react";
 
 function Sidebar() {
@@ -37,7 +37,7 @@ function Sidebar() {
             <span className="text-sm">Show online only</span>
           </label>
           <span className="text-xs text-zinc-500">
-            ({onlineUsers.length - 1}
+            ({onlineUsers.length - 1})
           </span>
         </div>
       </div>
