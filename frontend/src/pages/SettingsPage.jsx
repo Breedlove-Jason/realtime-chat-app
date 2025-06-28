@@ -73,7 +73,7 @@ const ChatPreviewMessage = memo(({ message }) => (
   </div>
 ));
 
-function SettingsPage() {
+const SettingsPage = () => {
   const { theme, setTheme } = useThemeStore();
 
   return (

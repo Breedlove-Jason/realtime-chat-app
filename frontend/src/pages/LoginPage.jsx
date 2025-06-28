@@ -5,7 +5,7 @@ import AuthImagePattern from "../components/AuthImagePattern.jsx";
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
-function LoginPage() {
+const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '' });
   const { login, isLoggingIn } = useAuthStore();

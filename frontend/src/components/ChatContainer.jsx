@@ -3,7 +3,7 @@ import {useChatStore} from "../store/useChatStore.js";
 import MessageInput from "./MessageInput.jsx";
 import ChatHeader from "./ChatHeader.jsx";
 
-function ChatContainer() {
+const ChatContainer = () => {
     const {messages, getMessages, areMessagesLoading, selectedUser} = useChatStore()
 useEffect(() => {
     getMessages(selectedUser._id)

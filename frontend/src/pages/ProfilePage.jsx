@@ -4,7 +4,7 @@ import React from "react";
 import { useAuthStore } from "../store/useAuthStore.js";
 import { Camera, User, Mail } from "lucide-react";
 
-function ProfilePage() {
+const ProfilePage = () => {
   const { authUser, isUpdatingProfile, updateProfile } = useAuthStore();
   const [selectedImg, setSelectedImg] = React.useState(null);
 

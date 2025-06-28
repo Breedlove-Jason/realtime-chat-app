@@ -3,7 +3,7 @@ import { useAuthStore } from '../store/useAuthStore.js';
 import { Link } from 'react-router-dom';
 import { MessageSquare, Settings, User, LogOut } from 'lucide-react';
 
-function Navbar() {
+const Navbar = () => {
   const { logout, authUser } = useAuthStore();
   return (
     <header className="bg-base-100 border-b border-base-300 fixed w-full top-0 z-40 backdrop-blur-lg bg-base-100/80">
