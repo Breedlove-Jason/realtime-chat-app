@@ -1,10 +1,7 @@
 import { create } from 'zustand';
 import { axiosInstance } from '../lib/axios.js';
 import toast from 'react-hot-toast';
-import {
-  connectSocket,
-  disconnectSocket,
-} from '../lib/socket.js';
+
 import {io} from "socket.io-client";
 
 const BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:5006" : "/";
@@ -23,7 +20,7 @@ export const useAuthStore = create((set, get) => ({
       set({ authUser: res.data });
       // Connect socket if user is already authenticated
       if (res.data) {
-        connectSocket(res.data._id);
+       get().connectSocket(res.data._id);
       }
     } catch (e) {
       console.error('Error checking auth:', e);
@@ -38,7 +35,7 @@ export const useAuthStore = create((set, get) => ({
       const res = await axiosInstance.post('/auth/signup', data);
       set({ authUser: res.data });
       // Connect socket after successful signup
-      connectSocket(res.data._id);
+      get().connectSocket(res.data._id);
       toast.success('Account created successfully');
     } catch (e) {
       toast.error(e.response?.data?.message || 'Error creating account');
@@ -66,14 +63,9 @@ export const useAuthStore = create((set, get) => ({
   logout: async () => {
     try {
       await axiosInstance.post('/auth/logout');
-      // Disconnect socket when logging out
-      disconnectSocket();
-      // Reset chat state
-      const { resetState } = (
-        await import('./useChatStore.js')
-      ).useChatStore.getState();
-      resetState();
       set({ authUser: null, onlineUsers: [] });
+      // Disconnect socket when logging out
+      get().disconnectSocket();
       toast.success('Logged out successfully');
     } catch (e) {
       toast.error(e.response?.data?.message || 'Error logging out');
@@ -118,8 +110,4 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  // Set online users received from socket
-  // setOnlineUsers: (onlineUsers) => {
-  //   set({ onlineUsers });
-  // },
 }));
