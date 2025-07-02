@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { axiosInstance } from "../lib/axios.js";
 import toast from "react-hot-toast";
+import { connectSocket, disconnectSocket, setupOnlineUsersListener } from "../lib/socket.js";
 
 export const useAuthStore = create((set) => ({
   authUser: null,
@@ -14,6 +15,10 @@ export const useAuthStore = create((set) => ({
     try {
       const res = await axiosInstance.get("/auth/check");
       set({ authUser: res.data });
+      // Connect socket if user is already authenticated
+      if (res.data) {
+        connectSocket(res.data._id);
+      }
     } catch (e) {
       console.error("Error checking auth:", e);
       set({ authUser: null });
@@ -26,6 +31,8 @@ export const useAuthStore = create((set) => ({
     try {
       const res = await axiosInstance.post("/auth/signup", data);
       set({ authUser: res.data });
+      // Connect socket after successful signup
+      connectSocket(res.data._id);
       toast.success("Account created successfully");
     } catch (e) {
       toast.error(e.response?.data?.message || "Error creating account");
@@ -39,6 +46,8 @@ export const useAuthStore = create((set) => ({
     try {
       const res = await axiosInstance.post("/auth/login", data);
       set({ authUser: res.data });
+      // Connect socket after successful login
+      connectSocket(res.data._id);
       toast.success("Logged in successfully");
     } catch (e) {
       toast.error(e.response?.data?.message || "Error logging in");
@@ -50,7 +59,12 @@ export const useAuthStore = create((set) => ({
   logout: async () => {
     try {
       await axiosInstance.post("/auth/logout");
-      set({ authUser: null });
+      // Disconnect socket when logging out
+      disconnectSocket();
+      // Reset chat state
+      const { resetState } = (await import('./useChatStore.js')).useChatStore.getState();
+      resetState();
+      set({ authUser: null, onlineUsers: [] });
       toast.success("Logged out successfully");
     } catch (e) {
       toast.error(e.response?.data?.message || "Error logging out");
@@ -69,5 +83,10 @@ export const useAuthStore = create((set) => ({
     } finally {
       set({ isUpdatingProfile: false });
     }
+  },
+
+  // Set online users received from socket
+  setOnlineUsers: (onlineUsers) => {
+    set({ onlineUsers });
   },
 }));

@@ -59,7 +59,8 @@ export const sendMessage = async (req, res) => {
 
         await newMessage.save();
 
-        // realtime functionality goes here => socket.io
+        // No need to emit socket event here as it's handled in the frontend
+        // The frontend will emit 'send-message' event after receiving the response
 
         res.status(201).json(newMessage);
     } catch (e) {

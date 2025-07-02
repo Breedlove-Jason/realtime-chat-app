@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import toast from 'react-hot-toast';
 import { axiosInstance } from '../lib/axios.js';
+import { sendMessageSocket, setupMessageListener } from '../lib/socket.js';
+import { useAuthStore } from './useAuthStore.js';
 
 export const useChatStore = create((set, get) => ({
   messages: [],
@@ -8,6 +10,27 @@ export const useChatStore = create((set, get) => ({
   selectedUser: null,
   areUsersLoading: false,
   areMessagesLoading: false,
+
+  // Initialize socket message listener
+  initializeMessageListener: () => {
+    setupMessageListener((message) => {
+      const { messages, selectedUser } = get();
+      // Only add the message if it's from the currently selected conversation
+      if (selectedUser && 
+          (message.senderId === selectedUser._id || message.receiverId === selectedUser._id)) {
+        set({ messages: [...messages, message] });
+      }
+    });
+  },
+
+  // Reset state when user logs out
+  resetState: () => {
+    set({
+      messages: [],
+      users: [],
+      selectedUser: null,
+    });
+  },
 
   getUsers: async () => {
     set({ areUsersLoading: true });
@@ -44,6 +67,14 @@ export const useChatStore = create((set, get) => ({
         `/messages/send/${selectedUser._id}`, messageData,
       );
       set({ messages: [...messages, res.data] });
+
+      // Send message via socket for real-time delivery
+      const { authUser } = useAuthStore.getState();
+      sendMessageSocket({
+        ...res.data,
+        senderId: authUser._id,
+        receiverId: selectedUser._id
+      });
     } catch (e) {
       toast.error(e.response?.data?.message || 'Failed to send message');
       console.error(e);
