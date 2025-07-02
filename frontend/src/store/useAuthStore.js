@@ -1,26 +1,32 @@
-import { create } from "zustand";
-import { axiosInstance } from "../lib/axios.js";
-import toast from "react-hot-toast";
-import { connectSocket, disconnectSocket, setupOnlineUsersListener } from "../lib/socket.js";
+import { create } from 'zustand';
+import { axiosInstance } from '../lib/axios.js';
+import toast from 'react-hot-toast';
+import {
+  connectSocket,
+  disconnectSocket,
+} from '../lib/socket.js';
+import {io} from "socket.io-client";
 
-export const useAuthStore = create((set) => ({
+const BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:5006" : "/";
+export const useAuthStore = create((set, get) => ({
   authUser: null,
   isSigningUp: false,
   isLoggingIn: false,
   isUpdatingProfile: false,
   isCheckingAuth: true,
   onlineUsers: [],
+  socket: null,
 
   checkAuth: async () => {
     try {
-      const res = await axiosInstance.get("/auth/check");
+      const res = await axiosInstance.get('/auth/check');
       set({ authUser: res.data });
       // Connect socket if user is already authenticated
       if (res.data) {
         connectSocket(res.data._id);
       }
     } catch (e) {
-      console.error("Error checking auth:", e);
+      console.error('Error checking auth:', e);
       set({ authUser: null });
     } finally {
       set({ isCheckingAuth: false });
@@ -29,13 +35,13 @@ export const useAuthStore = create((set) => ({
   signUp: async (data) => {
     set({ isSigningUp: true });
     try {
-      const res = await axiosInstance.post("/auth/signup", data);
+      const res = await axiosInstance.post('/auth/signup', data);
       set({ authUser: res.data });
       // Connect socket after successful signup
       connectSocket(res.data._id);
-      toast.success("Account created successfully");
+      toast.success('Account created successfully');
     } catch (e) {
-      toast.error(e.response?.data?.message || "Error creating account");
+      toast.error(e.response?.data?.message || 'Error creating account');
       console.error(e);
     } finally {
       set({ isSigningUp: false });
@@ -44,13 +50,14 @@ export const useAuthStore = create((set) => ({
   login: async (data) => {
     set({ isLoggingIn: true });
     try {
-      const res = await axiosInstance.post("/auth/login", data);
+      const res = await axiosInstance.post('/auth/login', data);
       set({ authUser: res.data });
+      toast.success('Logged in successfully');
+
       // Connect socket after successful login
-      connectSocket(res.data._id);
-      toast.success("Logged in successfully");
+      get().connectSocket(res.data._id);
     } catch (e) {
-      toast.error(e.response?.data?.message || "Error logging in");
+      toast.error(e.response?.data?.message || 'Error logging in');
       console.error(e);
     } finally {
       set({ isLoggingIn: false });
@@ -58,35 +65,61 @@ export const useAuthStore = create((set) => ({
   },
   logout: async () => {
     try {
-      await axiosInstance.post("/auth/logout");
+      await axiosInstance.post('/auth/logout');
       // Disconnect socket when logging out
       disconnectSocket();
       // Reset chat state
-      const { resetState } = (await import('./useChatStore.js')).useChatStore.getState();
+      const { resetState } = (
+        await import('./useChatStore.js')
+      ).useChatStore.getState();
       resetState();
       set({ authUser: null, onlineUsers: [] });
-      toast.success("Logged out successfully");
+      toast.success('Logged out successfully');
     } catch (e) {
-      toast.error(e.response?.data?.message || "Error logging out");
+      toast.error(e.response?.data?.message || 'Error logging out');
       console.error(e);
     }
   },
   updateProfile: async (data) => {
     set({ isUpdatingProfile: true });
     try {
-      const res = await axiosInstance.put("/auth/update-profile", data);
+      const res = await axiosInstance.put('/auth/update-profile', data);
       set({ authUser: res.data });
-      toast.success("Profile updated successfully");
+      toast.success('Profile updated successfully');
     } catch (e) {
-      toast.error(e.response?.data?.message || "Error updating profile");
+      toast.error(e.response?.data?.message || 'Error updating profile');
       console.error(e);
     } finally {
       set({ isUpdatingProfile: false });
     }
   },
 
-  // Set online users received from socket
-  setOnlineUsers: (onlineUsers) => {
-    set({ onlineUsers });
+  connectSocket: () => {
+    const { authUser } = get();
+    if (!authUser || get().socket?.connected) return;
+
+    const socket = io(BASE_URL, {
+      query: {
+        userId: authUser._id,
+      },
+    });
+    socket.connect();
+
+    set({ socket: socket });
+
+    socket.on('getOnlineUsers', (userIds) => {
+      set({ onlineUsers: userIds });
+    });
   },
+
+  disconnectSocket: () => {
+    if (get().socket?.connected) {
+      get().socket.disconnect();
+    }
+  },
+
+  // Set online users received from socket
+  // setOnlineUsers: (onlineUsers) => {
+  //   set({ onlineUsers });
+  // },
 }));
