@@ -69,6 +69,30 @@ A modern, feature-rich real-time chat application built with the MERN stack (Mon
    npm run dev
    ```
 
+### Seeding the Database (Optional)
+The application comes with seed files to populate your database with sample users and messages for testing and development purposes.
+
+1. Seed the database with sample users
+   ```bash
+   npm run seed:users
+   ```
+
+2. Seed the database with sample messages between users
+   ```bash
+   npm run seed:messages
+   ```
+
+3. Or seed both users and messages in one command
+   ```bash
+   npm run seed:all
+   ```
+
+This will create:
+- 15 sample user accounts with profile pictures
+- Multiple conversations between random pairs of users
+- Various conversation topics with realistic message exchanges
+- Messages with timestamps spread over the last 30 days
+
 ### Frontend Setup
 1. Open a new terminal and navigate to the frontend directory
    ```bash

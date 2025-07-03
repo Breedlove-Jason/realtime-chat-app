@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "main": "src/index.js",
   "scripts": {
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon src/index.js",
+    "seed:users": "node src/seeds/user.seed.js",
+    "seed:messages": "node src/seeds/message.seed.js",
+    "seed:all": "npm run seed:users && npm run seed:messages"
   },
   "keywords": [],
   "author": "",
