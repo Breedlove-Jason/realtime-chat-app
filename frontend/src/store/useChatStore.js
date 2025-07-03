@@ -1,7 +1,7 @@
-import { create } from "zustand";
-import toast from "react-hot-toast";
-import { axiosInstance } from "../lib/axios.js";
-import { useAuthStore } from "./useAuthStore.js";
+import { create } from 'zustand';
+import toast from 'react-hot-toast';
+import { axiosInstance } from '../lib/axios.js';
+import { useAuthStore } from './useAuthStore.js';
 
 export const useChatStore = create((set, get) => ({
   messages: [],
@@ -10,23 +10,13 @@ export const useChatStore = create((set, get) => ({
   areUsersLoading: false,
   areMessagesLoading: false,
 
-  // Reset state when user logs out
-  resetState: () => {
-    set({
-      messages: [],
-      users: [],
-      selectedUser: null,
-    });
-  },
-
   getUsers: async () => {
     set({ areUsersLoading: true });
     try {
-      const res = await axiosInstance.get("/messages/users");
+      const res = await axiosInstance.get('/messages/users');
       set({ users: res.data });
-      // toast.success('Users loaded successfully');
     } catch (e) {
-      toast.error(e.response?.data?.message || "Failed to load users");
+      toast.error(e.response.data.message || 'Failed to load users');
       console.error(e);
     } finally {
       set({ areUsersLoading: false });
@@ -38,9 +28,8 @@ export const useChatStore = create((set, get) => ({
     try {
       const res = await axiosInstance.get(`/messages/${userId}`);
       set({ messages: res.data });
-      // toast.success('Messages loaded successfully');
     } catch (e) {
-      toast.error(e.response?.data?.message || "Failed to load messages");
+      toast.error(e.response.data.message || 'Failed to load messages');
       console.error(e);
     } finally {
       set({ areMessagesLoading: false });
@@ -55,26 +44,18 @@ export const useChatStore = create((set, get) => ({
         messageData,
       );
       set({ messages: [...messages, res.data] });
-
-      // Send message via socket for real-time delivery
-      const { authUser } = useAuthStore.getState();
-      sendMessageSocket({
-        ...res.data,
-        senderId: authUser._id,
-        receiverId: selectedUser._id,
-      });
-    } catch (e) {
-      toast.error(e.response?.data?.message || "Failed to send message");
-      console.error(e);
+    } catch (error) {
+      toast.error(error.response.data.message);
     }
   },
+
   subscribeToMessages: () => {
     const { selectedUser } = get();
     if (!selectedUser) return;
 
     const socket = useAuthStore.getState().socket;
 
-    socket.on("newMessage", (newMessage) => {
+    socket.on('newMessage', (newMessage) => {
       const isMessageSentFromSelectedUser =
         newMessage.senderId === selectedUser._id;
       if (!isMessageSentFromSelectedUser) return;
@@ -87,7 +68,7 @@ export const useChatStore = create((set, get) => ({
 
   unsubscribeFromMessages: () => {
     const socket = useAuthStore.getState().socket;
-    socket.off("newMessage");
+    socket.off('newMessage');
   },
 
   setSelectedUser: (selectedUser) => set({ selectedUser }),
