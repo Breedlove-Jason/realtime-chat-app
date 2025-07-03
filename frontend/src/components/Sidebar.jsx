@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { useChatStore } from "../store/useChatStore.js";
-import { useAuthStore } from "../store/useAuthStore.js";
-import SidebarSkeleton from "./skeletons/SidebarSkeleton.jsx";
-import { Users } from "lucide-react";
+import React, { useEffect, useState } from 'react';
+import { useChatStore } from '../store/useChatStore.js';
+import { useAuthStore } from '../store/useAuthStore.js';
+import SidebarSkeleton from './skeletons/SidebarSkeleton.jsx';
+import { Users } from 'lucide-react';
 
 const Sidebar = () => {
   const { getUsers, users, selectedUser, setSelectedUser, areUsersLoading } =
@@ -25,7 +25,6 @@ const Sidebar = () => {
           <Users className="size-6" />
           <span className="font-medium hidden lg:block">Contacts</span>
         </div>
-        {/*TODO: Online filter toggle*/}
         <div className="mt-3 hidden lg:block">
           <label className="cursor-pointer flex items-center gap-2">
             <input
@@ -47,11 +46,11 @@ const Sidebar = () => {
             key={user._id}
             onClick={() => setSelectedUser(user)}
             className={`w-full p-3 flex items-center gap-3 hover:bg-base-300 transition-colors
-                ${selectedUser?._id === user._id ? "bg-base-300 ring-1 ring-base-300" : ""}`}
+                ${selectedUser?._id === user._id ? 'bg-base-300 ring-1 ring-base-300' : ''}`}
           >
             <div className="relative mx-auto lg:mx-0">
               <img
-                src={user.profilePic || "/avatar.png"}
+                src={user.profilePic || '/avatar.png'}
                 alt={user.name}
                 className="size-12 object-cover rounded-full"
               />
@@ -63,7 +62,7 @@ const Sidebar = () => {
             <div className="hidden lg:block text-left min-w-0">
               <div className="font-medium truncate">{user.fullName}</div>
               <div className="text-sm text-zinc-400">
-                {onlineUsers.includes(user._id) ? "Online" : "Offline"}
+                {onlineUsers.includes(user._id) ? 'Online' : 'Offline'}
               </div>
             </div>
           </button>
@@ -74,6 +73,6 @@ const Sidebar = () => {
       </div>
     </aside>
   );
-}
+};
 
 export default Sidebar;

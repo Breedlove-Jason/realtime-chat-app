@@ -1,10 +1,10 @@
-import React, { useEffect, useRef } from "react";
-import { useChatStore } from "../store/useChatStore.js";
-import MessageInput from "./MessageInput.jsx";
-import ChatHeader from "./ChatHeader.jsx";
-import MessageSkeleton from "./skeletons/MessageSkeleton.jsx";
-import { useAuthStore } from "../store/useAuthStore.js";
-import { formatMessageOTime } from "../lib/utils.js";
+import React, { useEffect, useRef } from 'react';
+import { useChatStore } from '../store/useChatStore.js';
+import MessageInput from './MessageInput.jsx';
+import ChatHeader from './ChatHeader.jsx';
+import MessageSkeleton from './skeletons/MessageSkeleton.jsx';
+import { useAuthStore } from '../store/useAuthStore.js';
+import { formatMessageOTime } from '../lib/utils.js';
 
 const ChatContainer = () => {
   const {
@@ -34,7 +34,9 @@ const ChatContainer = () => {
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
-    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messageEndRef.current && messages) {
+      messageEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [messages]);
 
   if (areMessagesLoading) {
@@ -53,12 +55,12 @@ const ChatContainer = () => {
         {messages.map((message) => (
           <div
             key={message._id}
-            className={`chat ${message.senderId === authUser._id ? "chat-end" : "chat-start"}`}
+            className={`chat ${message.senderId === authUser._id ? 'chat-end' : 'chat-start'}`}
             style={{
               alignSelf:
-                message.senderId === authUser._id ? "flex-end" : "flex-start",
-              marginTop: message.senderId === authUser._id ? "auto" : "4px",
-              marginBottom: message.senderId === authUser._id ? "4px" : "auto",
+                message.senderId === authUser._id ? 'flex-end' : 'flex-start',
+              marginTop: message.senderId === authUser._id ? 'auto' : '4px',
+              marginBottom: message.senderId === authUser._id ? '4px' : 'auto',
             }}
           >
             <div className="chat-image avatar">
@@ -66,8 +68,8 @@ const ChatContainer = () => {
                 <img
                   src={
                     message.senderId === authUser._id
-                      ? authUser.profilePic || "/avatar.png"
-                      : selectedUser.profilePic || "/avatar.png"
+                      ? authUser.profilePic || '/avatar.png'
+                      : selectedUser.profilePic || '/avatar.png'
                   }
                   alt="profile pic"
                 />
