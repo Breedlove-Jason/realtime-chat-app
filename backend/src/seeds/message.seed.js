@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
-import { connectDB } from "../lib/db.js";
-import { User } from "../models/user.model.js";
+import {connectDB} from "../lib/db.js";
+import {User} from "../models/user.model.js";
 import Message from "../models/message.model.js";
 import path from "path";
 
@@ -119,14 +119,47 @@ const createConversation = (senderId, receiverId, topic) => {
   const messages = [];
   const { messages: messageTexts } = topic;
 
-  // Alternate messages between sender and receiver
+  // Base time - start from a random date within the last 30 days
+  // Create a more realistic WhatsApp-like conversation flow
+  let currentTime = getRandomDate();
+  let currentSender = Math.random() > 0.5 ? senderId : receiverId; // Randomly choose who starts
+  let consecutiveMessages = 0;
+  let lastResponseTime = 0;
+
   messageTexts.forEach((text, index) => {
-    const isEven = index % 2 === 0;
+    // Determine if we should switch senders
+    if (index > 0) {
+      // After 1-3 consecutive messages, switch sender (with higher probability as count increases)
+      const switchProbability = 0.3 + (consecutiveMessages * 0.2);
+      if (Math.random() < switchProbability) {
+        currentSender = currentSender === senderId ? receiverId : senderId;
+        consecutiveMessages = 0;
+
+        // Add a longer delay when switching senders (someone is "responding")
+        // Longer messages take longer to read and respond to
+        const responseDelay = 1 + Math.floor(Math.random() * 5) + (messageTexts[index-1].length / 20);
+        lastResponseTime = responseDelay * 60 * 1000; // Convert to milliseconds
+        currentTime = new Date(currentTime.getTime() + lastResponseTime);
+      } else {
+        consecutiveMessages++;
+
+        // Quick succession for messages from the same sender (typing delay)
+        const typingDelay = 0.2 + (text.length / 100) + (Math.random() * 0.5);
+        currentTime = new Date(currentTime.getTime() + typingDelay * 60 * 1000);
+      }
+    }
+
+    // Occasionally add a longer gap (1-4 hours) to simulate breaks in conversation
+    if (index > 0 && Math.random() < 0.15) {
+      const breakHours = 1 + Math.floor(Math.random() * 3);
+      currentTime = new Date(currentTime.getTime() + breakHours * 60 * 60 * 1000);
+    }
+
     messages.push({
-      senderId: isEven ? senderId : receiverId,
-      receiverId: isEven ? receiverId : senderId,
+      senderId: currentSender,
+      receiverId: currentSender === senderId ? receiverId : senderId,
       text,
-      createdAt: getRandomDate()
+      createdAt: new Date(currentTime)
     });
   });
 
@@ -155,14 +188,16 @@ const seedDatabase = async () => {
         // Skip creating conversation with self
         if (i === j) continue;
 
-        // Select a random conversation topic
-        const randomTopic = conversationTopics[Math.floor(Math.random() * conversationTopics.length)];
+        // Select a topic based on user pair to ensure different conversations
+        // Use a combination of user indices to select a topic
+        const topicIndex = (i * users.length + j) % conversationTopics.length;
+        const selectedTopic = conversationTopics[topicIndex];
 
         // Create messages for this conversation
         const conversationMessages = createConversation(
           users[i]._id,
           users[j]._id,
-          randomTopic
+          selectedTopic
         );
 
         allMessages = [...allMessages, ...conversationMessages];

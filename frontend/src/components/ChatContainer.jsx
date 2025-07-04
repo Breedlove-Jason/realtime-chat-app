@@ -61,22 +61,27 @@ const ChatContainer = () => {
 
   if (areMessagesLoading) {
     return (
-      <div className="flex-1 flex flex-col overflow-auto">
+      <div className="flex-1 flex flex-col overflow-hidden">
         <ChatHeader />
-        <MessageSkeleton />
+        <div className="flex-1 overflow-y-auto" style={{ height: 'calc(100vh - 180px)' }}>
+          <MessageSkeleton />
+        </div>
         <MessageInput />
       </div>
     );
   }
   return (
-    <div className="flex-1 flex flex-col overflow-auto">
+    <div className="flex-1 flex flex-col overflow-hidden">
       {/* Chat header showing the current conversation partner */}
       <ChatHeader />
 
       {/* Message list container with scrolling */}
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col">
-        {/* Map through and render each message */}
-        {messages.map((message) => {
+      <div className="flex-1 overflow-y-auto p-4 flex flex-col-reverse space-y-reverse space-y-2" style={{ height: 'calc(100vh - 180px)' }}>
+        {/* Empty div at the beginning for auto-scrolling (will be at the bottom visually) */}
+        <div ref={messageEndRef} />
+
+        {/* Map through and render each message, newest at the bottom for both sender and receiver */}
+        {[...messages].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map((message) => {
           // Determine if this message was sent by the current user
           const isOwnMessage = message.senderId === authUser._id;
 
@@ -86,10 +91,11 @@ const ChatContainer = () => {
               // Apply different styling based on whether message is sent or received
               className={`chat ${isOwnMessage ? 'chat-end' : 'chat-start'}`}
               style={{
-                // Position messages from current user on the right, others on the left
                 alignSelf: isOwnMessage ? 'flex-end' : 'flex-start',
-                marginTop: isOwnMessage ? 'auto' : '4px',
-                marginBottom: isOwnMessage ? '4px' : 'auto',
+                marginTop: '4px',
+                marginBottom: '4px',
+                justifyContent: isOwnMessage ? 'flex-end' : 'flex-start',
+                maxWidth: '80%',
               }}
             >
               {/* User avatar */}
@@ -127,9 +133,6 @@ const ChatContainer = () => {
             </div>
           );
         })}
-
-        {/* Empty div at the end for auto-scrolling */}
-        <div ref={messageEndRef} />
       </div>
 
       {/* Message input component for sending new messages */}
