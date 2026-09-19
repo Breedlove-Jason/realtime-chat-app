@@ -5,27 +5,26 @@ import SidebarSkeleton from './skeletons/SidebarSkeleton.jsx';
 import { Users } from 'lucide-react';
 
 const Sidebar = () => {
-  const { getUsers, users, selectedUser, setSelectedUser, areUsersLoading } =
+  const { getUsers, users, selectedUser, setSelectedUser, areUsersLoading, unread } =
     useChatStore();
   const { onlineUsers } = useAuthStore();
+  const [search, setSearch] = useState('');
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
   useEffect(() => {
     getUsers();
   }, [getUsers]);
 
-  const filteredUsers = showOnlineOnly
-    ? users.filter((user) => onlineUsers.includes(user._id))
-    : users;
+  const filteredUsers = users.filter(user => (!showOnlineOnly || onlineUsers.includes(user._id)) && user.fullName.toLowerCase().includes(search.toLowerCase()));
 
   if (areUsersLoading) return <SidebarSkeleton />;
   return (
-    <aside className="h-full w-20 lg:w-72 border-r border-base-300 flex flex-col transition-all duration-200">
+    <aside className="h-full w-24 sm:w-64 border-r border-base-300 flex flex-col transition-all duration-200">
       <div className="border-b border-base-300 w-full p-5">
         <div className="flex items-center gap-2">
           <Users className="size-6" />
-          <span className="font-medium hidden lg:block">Contacts</span>
+          <span className="font-medium hidden sm:block">Contacts</span>
         </div>
-        <div className="mt-3 hidden lg:block">
+        <div className="mt-3 hidden sm:block"><input aria-label="Search contacts" placeholder="Find a person…" value={search} onChange={e => setSearch(e.target.value)} className="input input-sm input-bordered w-full mb-3" />
           <label className="cursor-pointer flex items-center gap-2">
             <input
               className="checkbox checkbox-sm"
@@ -36,7 +35,7 @@ const Sidebar = () => {
             <span className="text-sm">Show online only</span>
           </label>
           <span className="text-xs text-zinc-500">
-            ({onlineUsers.length - 1})
+            ({Math.max(0, onlineUsers.length - 1)} online)
           </span>
         </div>
       </div>
@@ -48,10 +47,10 @@ const Sidebar = () => {
             className={`w-full p-3 flex items-center gap-3 hover:bg-base-300 transition-colors
                 ${selectedUser?._id === user._id ? 'bg-base-300 ring-1 ring-base-300' : ''}`}
           >
-            <div className="relative mx-auto lg:mx-0">
+            <div className="relative mx-auto sm:mx-0">
               <img
-                src={user.profilePic || '/avatar.png'}
-                alt={user.name}
+                src={user.profilePic || '/avatar.svg'}
+                alt={user.fullName}
                 className="size-12 object-cover rounded-full"
               />
               {onlineUsers.includes(user._id) && (
@@ -59,8 +58,8 @@ const Sidebar = () => {
               )}
             </div>
             {/*Users info - only visible on larger screens */}
-            <div className="hidden lg:block text-left min-w-0">
-              <div className="font-medium truncate">{user.fullName}</div>
+            <div className="hidden sm:block text-left min-w-0">
+              <div className="font-medium truncate">{user.fullName} {unread[user._id] > 0 && <span className="badge badge-primary badge-sm">{unread[user._id]}</span>}</div>
               <div className="text-sm text-zinc-400">
                 {onlineUsers.includes(user._id) ? 'Online' : 'Offline'}
               </div>
@@ -68,7 +67,7 @@ const Sidebar = () => {
           </button>
         ))}
         {filteredUsers.length === 0 && (
-          <div className="text-center text-zinc-500 py-4">No online users</div>
+          <div className="text-center text-zinc-500 py-4">No contacts found</div>
         )}
       </div>
     </aside>
@@ -76,3 +75,4 @@ const Sidebar = () => {
 };
 
 export default Sidebar;
+

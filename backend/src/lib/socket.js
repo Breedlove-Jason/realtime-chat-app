@@ -1,39 +1,44 @@
 import { Server } from 'socket.io';
-import http from 'http';
+import http from 'node:http';
 import express from 'express';
-
-const app = express();
-const server = http.createServer(app);
-
-const io = new Server(server, {
-  cors: { origin: ['http://localhost:5173'], credentials: true },
+import jwt from 'jsonwebtoken';
+import cookie from 'cookie';
+import { User } from '../models/user.model.js';
+import { origins } from './config.js';
+export const app = express();
+export const server = http.createServer(app);
+export const io = new Server(server, {
+ cors: { origin: origins, credentials: true },
+ maxHttpBufferSize: 16384,
+ allowRequest: (req, callback) => callback(null, !req.headers.origin || origins.includes(req.headers.origin)),
 });
-
-export function getReceiverSocketId(userId) {
-  return userSocketMap[userId];
-}
-
-// used to store online users
-const userSocketMap = {};
-
-io.on('connection', (socket) => {
-  console.log('A user connected', socket.id);
-
-  const userId = socket.handshake.query.userId;
-  if (userId) {
-    userSocketMap[userId] = socket.id;
-
-    // io.emit() is used to send events to all the connected clients
-    io.emit('getOnlineUsers', Object.keys(userSocketMap));
-  }
-
-  socket.on('disconnect', () => {
-    console.log('A user disconnected', socket.id);
-
-    // Remove user from the map when they disconnect
-    delete userSocketMap[userId];
-    io.emit('getOnlineUsers', Object.keys(userSocketMap));
-  });
+io.use(async (socket, next) => {
+ try {
+  const token = cookie.parse(socket.request.headers.cookie || '').jwt;
+  const claims = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
+  if (!await User.exists({ _id: claims.userId })) return next(new Error('Unauthorized'));
+  socket.data.userId = String(claims.userId);
+  socket.data.expiresAt = claims.exp * 1000;
+  next();
+ } catch { next(new Error('Unauthorized')); }
 });
-
-export { io, app, server };
+const presence = new Map();
+io.on('connection', socket => {
+ const id = socket.data.userId;
+ socket.join(id);
+ presence.set(id, (presence.get(id) || 0) + 1);
+ io.emit('getOnlineUsers', [...presence.keys()]);
+ const expiry = setTimeout(() => socket.disconnect(true), Math.max(0, socket.data.expiresAt - Date.now()));
+ let lastTyping = 0;
+ socket.on('typing', payload => {
+  if (Date.now() - lastTyping < 500 || !/^[a-f0-9]{24}$/.test(payload?.receiverId || '')) return;
+  lastTyping = Date.now();
+  socket.to(payload.receiverId).emit('typing', { userId: id });
+ });
+ socket.on('disconnect', () => {
+  clearTimeout(expiry);
+  const count = (presence.get(id) || 1) - 1;
+  if (count) presence.set(id, count); else presence.delete(id);
+  io.emit('getOnlineUsers', [...presence.keys()]);
+ });
+});

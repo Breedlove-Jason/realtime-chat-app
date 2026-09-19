@@ -2,115 +2,49 @@ import { create } from 'zustand';
 import toast from 'react-hot-toast';
 import { axiosInstance } from '../lib/axios.js';
 import { useAuthStore } from './useAuthStore.js';
-
-/**
- * Chat Store using Zustand
- * 
- * Manages all chat-related state and operations including:
- * - Messages between users
- * - List of users to chat with
- * - Currently selected user
- * - Loading states
- * - API operations for messages
- * - Socket.io subscriptions for real-time updates
- */
+const merge = (a, b) => [...new Map([...a, ...b].map(m => [m._id, m])).values()].sort((x,y) => x._id.localeCompare(y._id));
 export const useChatStore = create((set, get) => ({
-  // State
-  messages: [],          // List of messages with the selected user
-  users: [],             // List of users to chat with
-  selectedUser: null,    // Currently selected user for conversation
-  areUsersLoading: false,  // Loading state for users list
-  areMessagesLoading: false, // Loading state for messages
-
-  /**
-   * Fetches the list of users the current user can chat with
-   * Updates the users state and handles loading state
-   */
-  getUsers: async () => {
-    set({ areUsersLoading: true });
-    try {
-      const res = await axiosInstance.get('/messages/users');
-      set({ users: res.data });
-    } catch (e) {
-      toast.error(e.response.data.message || 'Failed to load users');
-      console.error(e);
-    } finally {
-      set({ areUsersLoading: false });
-    }
-  },
-
-  /**
-   * Fetches message history between the current user and the specified user
-   * @param {string} userId - ID of the user to get messages with
-   */
-  getMessages: async (userId) => {
-    set({ areMessagesLoading: true });
-    try {
-      const res = await axiosInstance.get(`/messages/${userId}`);
-      set({ messages: res.data });
-    } catch (e) {
-      toast.error(e.response.data.message || 'Failed to load messages');
-      console.error(e);
-    } finally {
-      set({ areMessagesLoading: false });
-    }
-  },
-
-  /**
-   * Sends a new message to the selected user
-   * @param {Object} messageData - Message data (text and/or image)
-   */
-  sendMessage: async (messageData) => {
-    const { selectedUser, messages } = get();
-    try {
-      const res = await axiosInstance.post(
-        `/messages/send/${selectedUser._id}`,
-        messageData,
-      );
-      // Add the new message to the messages array
-      set({ messages: [...messages, res.data] });
-    } catch (error) {
-      toast.error(error.response.data.message);
-    }
-  },
-
-  /**
-   * Sets up Socket.io listener for real-time message updates
-   * Only listens for messages from the currently selected user
-   */
-  subscribeToMessages: () => {
-    const { selectedUser } = get();
-    if (!selectedUser) return;
-
-    // Get socket from auth store
-    const socket = useAuthStore.getState().socket;
-
-    // Listen for new messages
-    socket.on('newMessage', (newMessage) => {
-      // Only process messages from the selected user
-      const isMessageSentFromSelectedUser =
-        newMessage.senderId === selectedUser._id;
-      if (!isMessageSentFromSelectedUser) return;
-
-      // Add the new message to the messages array
-      set({
-        messages: [...get().messages, newMessage],
-      });
-    });
-  },
-
-  /**
-   * Removes Socket.io listener to prevent memory leaks
-   * Called when component unmounts or user changes
-   */
-  unsubscribeFromMessages: () => {
-    const socket = useAuthStore.getState().socket;
-    socket.off('newMessage');
-  },
-
-  /**
-   * Sets the currently selected user for conversation
-   * @param {Object} selectedUser - User object to set as selected
-   */
-  setSelectedUser: (selectedUser) => set({ selectedUser }),
+ messages: [], users: [], selectedUser: null, unread: {}, typingUntil: {},
+ areUsersLoading: false, areMessagesLoading: false, hasOlder: false, loadingOlder: false,
+ reset: () => set({ messages: [], users: [], selectedUser: null, unread: {}, typingUntil: {}, hasOlder: false }),
+ getUsers: async () => {
+  set({ areUsersLoading: true });
+  try { const { data } = await axiosInstance.get('/messages/users'); set({ users: data }); }
+  catch { toast.error('Unable to load contacts. Try refreshing.'); }
+  finally { set({ areUsersLoading: false }); }
+ },
+ getMessages: async id => {
+  set({ areMessagesLoading: true });
+  try {
+   const { data } = await axiosInstance.get(`/messages/${id}`);
+   if (get().selectedUser?._id === id) set(s => ({ messages: merge(data, s.messages), hasOlder: data.length === 50 }));
+  } catch { toast.error('Unable to load conversation'); }
+  finally { if (get().selectedUser?._id === id) set({ areMessagesLoading: false }); }
+ },
+ loadOlder: async () => {
+  const { selectedUser, messages, loadingOlder } = get();
+  if (!selectedUser || !messages.length || loadingOlder) return;
+  set({ loadingOlder: true });
+  try {
+   const { data } = await axiosInstance.get(`/messages/${selectedUser._id}?before=${messages[0]._id}`);
+   if (get().selectedUser?._id === selectedUser._id) set(s => ({ messages: merge(data, s.messages), hasOlder: data.length === 50 }));
+  } catch { toast.error('Unable to load older messages'); }
+  finally { set({ loadingOlder: false }); }
+ },
+ sendMessage: async messageData => {
+  const id = get().selectedUser?._id;
+  if (!id) return false;
+  try {
+   const { data } = await axiosInstance.post(`/messages/send/${id}`, messageData);
+   if (get().selectedUser?._id === id) set(s => ({ messages: merge(s.messages, [data]) }));
+   return true;
+  } catch (error) { toast.error(error.response?.data?.message || 'Message not sent. Your draft is preserved.'); return false; }
+ },
+ receive: message => {
+  const me = useAuthStore.getState().authUser?._id;
+  const peer = message.senderId === me ? message.receiverId : message.senderId;
+  if (get().selectedUser?._id === peer) set(s => ({ messages: merge(s.messages, [message]) }));
+  else if (message.senderId !== me) set(s => ({ unread: { ...s.unread, [peer]: (s.unread[peer] || 0) + 1 } }));
+ },
+ setSelectedUser: selectedUser => set(s => ({ selectedUser, messages: [], hasOlder: false, unread: { ...s.unread, [selectedUser?._id]: 0 } })),
 }));

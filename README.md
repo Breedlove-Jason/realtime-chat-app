@@ -1,153 +1,70 @@
-# Realtime Chat Application
+# Relay — realtime conversations
 
-A modern, feature-rich real-time chat application built with the MERN stack (MongoDB, Express, React, Node.js) and Socket.io for real-time communication.
+A full-stack messenger by Jason Breedlove, built with React 19, Express 5, MongoDB, and Socket.IO. This extends the existing chat project with authenticated sockets, a consistent account API, safer uploads, and a portfolio preview.
 
-![Realtime Chat App](https://placeholder-for-app-screenshot.com)
+## Why this repository
+
+`realtime-chat-app` already contained a working persistence and account foundation. The compared `redis-chat-app` snapshot has a Next.js interface and sample contacts but no implemented authentication or Redis API. Relay preserves and improves the more complete full-stack app.
 
 ## Features
 
-- **Real-time Messaging**: Instant message delivery using Socket.io
-- **User Authentication**: Secure signup and login functionality
-- **Online Status**: See which users are currently online
-- **Image Sharing**: Send and receive images in conversations
-- **Profile Management**: Update profile information and avatar
-- **Theme Support**: Toggle between light and dark themes
-- **Responsive Design**: Works seamlessly on desktop and mobile devices
+- Email/password signup and login with HttpOnly session cookies.
+- Server-authenticated Socket.IO connections; clients cannot select another user's identity.
+- Private one-to-one message history, image attachments, and profile pictures (Cloudinary optional).
+- Multi-tab online presence, typing indicators, connection state, and in-session unread counts.
+- Contact search, search within loaded messages, and 50-message cursor pagination.
+- Duplicate-safe message merging and preserved drafts on failed sends.
+- 32 themes, responsive layout, reduced-motion support, and accessible control names.
+- Public interactive `/demo`: clearly labeled sample conversation with tab-local messages. No fake live users or simulated server delivery.
+- Health checks, graceful shutdown, rate limits, input validation, security headers, CI, Docker, and Render blueprint.
 
-## Technologies Used
+## Local development
 
-### Backend
-- **Node.js** & **Express**: Server framework
-- **MongoDB** & **Mongoose**: Database and ODM
-- **Socket.io**: Real-time bidirectional communication
-- **JWT**: Authentication and authorization
-- **bcrypt.js**: Password hashing
-- **Cloudinary**: Cloud storage for images
+Use Node 24.
 
-### Frontend
-- **React**: UI library
-- **Vite**: Build tool
-- **React Router**: Navigation and routing
-- **Zustand**: State management
-- **Tailwind CSS** & **DaisyUI**: Styling
-- **Socket.io Client**: Real-time communication with the server
-- **Axios**: HTTP requests
-- **React Hot Toast**: Notifications
+```sh
+npm ci --prefix backend
+npm ci --prefix frontend
+cp .env.example backend/.env
+# Set a random JWT_SECRET and your local or Atlas MONGODB_URI in backend/.env.
+npm run dev --prefix backend
+# In another terminal:
+npm run dev --prefix frontend
+```
 
-## Installation
+Open http://localhost:5173. Vite proxies `/api` and `/socket.io` to the backend at port 5006. Create two accounts in separate browser profiles for a real chat. The public directory exposes display names and avatars to other registered users; it does not expose their emails. This is a small portfolio community, not a private organization directory.
 
-### Prerequisites
-- Node.js (v14 or higher)
-- MongoDB (local or Atlas)
-- npm or yarn
+## Deployment
 
-### Backend Setup
-1. Clone the repository
-   ```bash
-   git clone https://github.com/yourusername/realtime-chat-app.git
-   cd realtime-chat-app
-   ```
+See [DEPLOYMENT.md](DEPLOYMENT.md). The supported baseline is **one persistent Node service serving both the built frontend and backend**, plus MongoDB Atlas. `render.yaml` and `Dockerfile` are included. No secrets are embedded in client code.
 
-2. Install backend dependencies
-   ```bash
-   cd backend
-   npm install
-   ```
+```sh
+npm run build
+NODE_ENV=production npm start
+```
 
-3. Create a `.env` file in the backend directory with the following variables:
-   ```
-   PORT=5006
-   MONGODB_URI=your_mongodb_connection_string
-   JWT_SECRET=your_jwt_secret
-   CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
-   CLOUDINARY_API_KEY=your_cloudinary_api_key
-   CLOUDINARY_API_SECRET=your_cloudinary_api_secret
-   ```
+Set `CLIENT_ORIGIN` to the exact HTTPS origin visitors will use. Add multiple origins as a comma-separated list if needed. For local testing of the production build over plain HTTP, secure cookies will not work; use development mode or an HTTPS reverse proxy.
 
-4. Start the backend server
-   ```bash
-   npm run dev
-   ```
+## Verification
 
-### Seeding the Database (Optional)
-The application comes with seed files to populate your database with sample users and messages for testing and development purposes.
+```sh
+npm run lint
+npm test
+```
 
-1. Seed the database with sample users
-   ```bash
-   npm run seed:users
-   ```
+Integration tests use an isolated temporary MongoDB, not your production database. They test signup/login, unauthenticated socket rejection, server-owned sender identity, typing, persisted delivery, private history, upload validation, origin checks, logout disconnection, and pagination. The first run downloads a MongoDB binary. Run on a host that permits starting MongoDB (GitHub Actions Ubuntu is configured).
 
-2. Seed the database with sample messages between users
-   ```bash
-   npm run seed:messages
-   ```
+## Scope and limitations
 
-3. Or seed both users and messages in one command
-   ```bash
-   npm run seed:all
-   ```
+- One Node instance. In-memory presence and rate limiting require shared infrastructure before horizontal scaling.
+- Messages are stored in MongoDB; this is **not end-to-end encrypted**.
+- Unread counts are session-local; no persistent read receipts yet.
+- Contact list is limited to 200 users; message search covers loaded history.
+- No password recovery, email verification, blocking/reporting, or moderation console yet. Do not present this portfolio release as a large public messaging service.
+- Logging out disconnects current sockets and clears the cookie. JWTs expire after seven days; server-side token revocation is not yet implemented.
+- Image delivery needs Cloudinary credentials. Text chat works without Cloudinary.
+- Demo messages are illustrative, stay in memory, and reset on refresh.
 
-This will create:
-- 15 sample user accounts with profile pictures
-- Multiple conversations between random pairs of users
-- Various conversation topics with realistic message exchanges
-- Messages with timestamps spread over the last 30 days
+## Credits
 
-### Frontend Setup
-1. Open a new terminal and navigate to the frontend directory
-   ```bash
-   cd ../frontend
-   ```
-
-2. Install frontend dependencies
-   ```bash
-   npm install
-   ```
-
-3. Start the frontend development server
-   ```bash
-   npm run dev
-   ```
-
-4. Open your browser and navigate to `http://localhost:5173`
-
-## Usage
-
-1. **Sign Up**: Create a new account with your email, username, and password
-2. **Log In**: Access your account with your credentials
-3. **Start Chatting**: Click on a user from the sidebar to start a conversation
-4. **Send Messages**: Type your message in the input field and press Enter or click the send button
-5. **Share Images**: Click the image icon to upload and send images
-6. **Update Profile**: Navigate to the profile page to update your information and avatar
-7. **Change Theme**: Toggle between light and dark themes in the settings
-
-## API Documentation
-
-### Authentication Endpoints
-- `POST /api/auth/signup`: Register a new user
-- `POST /api/auth/login`: Authenticate a user
-- `GET /api/auth/logout`: Log out a user
-- `GET /api/auth/check`: Check authentication status
-
-### Message Endpoints
-- `GET /api/messages/:userId`: Get messages between the authenticated user and another user
-- `POST /api/messages`: Send a new message
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgements
-
-- [Socket.io Documentation](https://socket.io/docs/v4/)
-- [React Documentation](https://reactjs.org/docs/getting-started.html)
-- [MongoDB Documentation](https://docs.mongodb.com/)
-- [Express Documentation](https://expressjs.com/)
+Built on the account, profile, theme, and messaging work already present in this repository. Dependency licenses remain their respective authors'.

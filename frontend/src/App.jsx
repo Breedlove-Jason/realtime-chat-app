@@ -1,3 +1,5 @@
+import { useChatStore } from './store/useChatStore.js';
+import DemoPage from './pages/DemoPage.jsx';
 import Navbar from './components/Navbar.jsx';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import HomePage from './pages/HomePage.jsx';
@@ -12,21 +14,36 @@ import { Toaster } from 'react-hot-toast';
 import { useThemeStore } from './store/useThemeStore.js';
 
 const App = () => {
-  const { authUser, checkAuth, isCheckingAuth, onlineUsers } = useAuthStore();
+  const { authUser, checkAuth, isCheckingAuth, socket } = useAuthStore();
   const { theme } = useThemeStore();
 
-  console.log({onlineUsers})
 
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
+
+  useEffect(() => {
+    if (!authUser) useChatStore.getState().reset();
+    if (!socket) return;
+    const receive = m => useChatStore.getState().receive(m);
+    const typing = ({ userId }) => useChatStore.setState(s => ({ typingUntil: { ...s.typingUntil, [userId]: Date.now() + 2500 } }));
+    const refresh = () => {
+      useChatStore.getState().getUsers();
+      const peer = useChatStore.getState().selectedUser;
+      if (peer) useChatStore.getState().getMessages(peer._id);
+    };
+    socket.on('newMessage', receive);
+    socket.on('typing', typing);
+    socket.on('contactsChanged', refresh);
+    socket.on('connect', refresh);
+    return () => { socket.off('newMessage', receive); socket.off('typing', typing); socket.off('contactsChanged', refresh); socket.off('connect', refresh); };
+  }, [authUser, socket]);
 
   // Apply theme to document element to prevent UI from looking squished initially
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
-  console.log('Auth User:', authUser);
   if (isCheckingAuth && !authUser) {
     return (
       <div className={'flex items-center justify-center h-screen'}>
@@ -39,9 +56,10 @@ const App = () => {
       <div data-theme={theme}>
         <Navbar />
         <Routes>
+          <Route path="/demo" element={<DemoPage />} />
           <Route
             path={'/'}
-            element={authUser ? <HomePage /> : <Navigate to={'/login'} />}
+            element={authUser ? <HomePage /> : <DemoPage />}
           />
           <Route
             path={'/signup'}
@@ -64,3 +82,4 @@ const App = () => {
 }
 
 export default App;
+
