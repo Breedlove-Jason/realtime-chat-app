@@ -31,6 +31,9 @@ const messageSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+messageSchema.index({ senderId: 1, receiverId: 1, _id: -1 });
+
 // Create the Message model from the schema
 const Message = mongoose.model("Message", messageSchema);
 export default Message;
+
