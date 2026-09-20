@@ -1,10 +1,14 @@
+![Relay — REALTIME CONVERSATIONS](docs/project-banner.svg)
+
+[Open live app](https://chat.jasonbreedlove.dev) · [Portfolio](https://www.jasonbreedlove.dev) · [Browse source](https://github.com/Breedlove-Jason/realtime-chat-app)
+
 # Relay — realtime conversations
 
 A full-stack messenger by Jason Breedlove, built with React 19, Express 5, MongoDB, and Socket.IO. This extends the existing chat project with authenticated sockets, a consistent account API, safer uploads, and a portfolio preview.
 
-## Why this repository
+## Engineering focus
 
-`realtime-chat-app` already contained a working persistence and account foundation. The compared `redis-chat-app` snapshot has a Next.js interface and sample contacts but no implemented authentication or Redis API. Relay preserves and improves the more complete full-stack app.
+Authenticated realtime delivery, persistent private conversations, and resilient client state in one deployed full-stack application.
 
 ## Features
 
