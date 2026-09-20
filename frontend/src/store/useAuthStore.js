@@ -44,6 +44,7 @@ export const useAuthStore = create((set, get) => ({
   },
 
   login: async (data) => {
+    if (get().isLoggingIn) return;
     set({ isLoggingIn: true });
     try {
       const res = await axiosInstance.post('/auth/login', data);
@@ -52,7 +53,9 @@ export const useAuthStore = create((set, get) => ({
 
       get().connectSocket();
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Connection failed. Please try again.');
+      return { error: error.response?.status === 429
+        ? 'Too many sign-in attempts. Please wait 15 minutes before trying again.'
+        : error.response?.data?.message || 'Connection failed. Please try again.' };
     } finally {
       set({ isLoggingIn: false });
     }

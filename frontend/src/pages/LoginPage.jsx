@@ -3,24 +3,28 @@ import { useAuthStore } from '../store/useAuthStore.js';
 import { MessageSquare, Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react';
 import AuthImagePattern from "../components/AuthImagePattern.jsx";
 import { Link } from 'react-router-dom';
-import toast from 'react-hot-toast';
+
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '' });
   const { login, isLoggingIn } = useAuthStore();
 
-  const validateForm = () => {
-    if(!formData.email.trim()) return toast.error("Email is required");
-    if(!/\S+@\S+\.\S+/.test(formData.email)) return toast.error("Invalid email format");
-    if(!formData.password) return toast.error("Password is required");
-    return true;
-  };
-
+  const [errors, setErrors] = useState({});
+  const [submitError, setSubmitError] = useState('');
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const success = validateForm();
-    if(success === true) await login(formData);
+    if (isLoggingIn) return;
+    const nextErrors = {};
+    const email = formData.email.trim();
+    if (!email) nextErrors.email = 'Email is required.';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) nextErrors.email = 'Enter a valid email address.';
+    if (!formData.password) nextErrors.password = 'Password is required.';
+    setErrors(nextErrors);
+    setSubmitError('');
+    if (Object.keys(nextErrors).length) return;
+    const result = await login({ ...formData, email });
+    if (result?.error) setSubmitError(result.error);
   };
   return (
     <div className="h-screen grid lg:grid-cols-2">
@@ -40,9 +44,9 @@ const LoginPage = () => {
               <p className="text-base-content/60">Sign in to your account</p>
             </div>
           </div>
-          <form onSubmit={handleSubmit} className={'space-y-6'}>
+          <form noValidate onSubmit={handleSubmit} className={'space-y-6'}>
             <div className="form-control">
-              <label>
+              <label htmlFor="login-email">
                 <span className={'label-text font-medium'}>Email</span>
               </label>
               <div className="relative">
@@ -50,6 +54,10 @@ const LoginPage = () => {
                   <Mail className={'h-5 w-5 text-base-content/40'} />
                 </div>
                 <input
+                  id="login-email"
+                  autoComplete="username"
+                  aria-invalid={Boolean(errors.email)}
+                  aria-describedby={errors.email ? 'login-email-error' : undefined}
                   type={'email'}
                   className={'input input-bordered w-full pl-10'}
                   placeholder={'you@example.com'}
@@ -60,8 +68,9 @@ const LoginPage = () => {
                 />
               </div>
             </div>
+            {errors.email && <p id="login-email-error" role="alert" className="text-error text-sm">{errors.email}</p>}
             <div className={'form-control'}>
-              <label className={'label-text font-medium'}>Password</label>
+              <label htmlFor="login-password" className={'label-text font-medium'}>Password</label>
               <div className="relative">
                 <div
                   className={
@@ -71,6 +80,10 @@ const LoginPage = () => {
                   <Lock className={'h-5 w-5 text-base-content/40'} />
                 </div>
                 <input
+                  id="login-password"
+                  autoComplete="current-password"
+                  aria-invalid={Boolean(errors.password)}
+                  aria-describedby={errors.password ? 'login-password-error' : undefined}
                   type={showPassword ? 'text' : 'password'}
                   className={'input input-bordered w-full pl-10'}
                   placeholder={'••••••••'}
@@ -82,6 +95,7 @@ const LoginPage = () => {
                 <button
                   type="button"
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
@@ -93,6 +107,8 @@ const LoginPage = () => {
               </div>
             </div>
 
+            {errors.password && <p id="login-password-error" role="alert" className="text-error text-sm">{errors.password}</p>}
+            {submitError && <p role="alert" className="alert alert-error">{submitError}</p>}
             <button
               type="submit"
               className="btn btn-primary w-full"
@@ -132,3 +148,4 @@ const LoginPage = () => {
 }
 
 export default LoginPage;
+
